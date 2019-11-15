@@ -1,7 +1,14 @@
 const request = require("supertest");
+const bcrypt = require("bcryptjs");
 
 const server = require("../api/server");
 const db = require("../database/dbConfig");
+const { add } = require("../models/users-model");
+
+const testUser = {
+    username: "henry",
+    password: "test"
+}
 
 describe("Auth Router Tests", () => {
     beforeEach(async () => {
@@ -9,7 +16,7 @@ describe("Auth Router Tests", () => {
     });
 
     describe("POST /register", () => {
-        it("returns 201 status code", async () => {
+        it("returns 201 status code and an authorization token", async () => {
             const user = {
                 username: "test",
                 password: "test"
@@ -18,7 +25,9 @@ describe("Auth Router Tests", () => {
             const res = await request(server)
                 .post("/api/auth/register")
                 .send(user)
+
             await expect(res.status).toBe(201);
+            await expect(res.body.token).toBeDefined();
         });
 
         it("returns the created user from database", async () => {
@@ -38,7 +47,46 @@ describe("Auth Router Tests", () => {
 
     describe("POST /login", () => {
         it("returns 201 status code", async () => {
+            const testUser = {
+                username: "henry",
+                password: "test"
+            }
+            
+            const hashedPassword = bcrypt.hashSync(testUser.password, 12);
+            testUser.password = hashedPassword;
 
+            await add(testUser);
+
+            const res = await request(server)
+                .post("/api/auth/login")
+                .send({
+                    username: "henry",
+                    password: "test"
+                });
+
+            await expect(res.status).toBe(200);
+        });
+
+        it("returns a welcome message and a token on log in", async () => {
+            const testUser = {
+                username: "henry",
+                password: "test"
+            }
+            
+            const hashedPassword = bcrypt.hashSync(testUser.password, 12);
+            testUser.password = hashedPassword;
+
+            await add(testUser);
+
+            const res = await request(server)
+                .post("/api/auth/login")
+                .send({
+                    username: "henry",
+                    password: "test"
+                });
+
+            await expect(res.body.message).toContain("Success! You are logged in!");
+            await expect(res.body.token).toBeDefined();
         });
     });
 
