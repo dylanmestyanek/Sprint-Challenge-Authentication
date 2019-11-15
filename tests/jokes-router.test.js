@@ -14,12 +14,15 @@ describe("Jokes Router Tests", () => {
             await expect(res.status).toBe(401);
         });
 
-        it("returns 200 status code when provided a jwt", async () => {
+        it("returns 200 status code when provided a jwt, and receive array of jokes", async () => {
             const token = generateToken({ id: 1, username: "test" });
 
            await jwt.verify(token, jwtSecret, async (err, decodedToken) => {
                    const res = await request(server).get("/api/jokes", authenticate).set("authorization", token);
-                   await expect(res.status).toBe(200);            
+                   await expect(res.status).toBe(200);
+                   await expect(res.body[0].id).toBeDefined();            
+                   await expect(res.body[0].joke).toBeDefined();            
+                   await expect(Object.getOwnPropertyNames(res.body[0])).toHaveLength(2);
             });  
         });
     });
