@@ -5,15 +5,15 @@ module.exports = (req, res, next) => {
   const token = req.headers.authorization;
 
   if (token){
-    jwt.sign(token, jwtSecret, (err, decodedToken) => {
+    jwt.verify(token, jwtSecret, (err, decodedToken) => {
         if (err) {
-          res.status(401).json({ message: "That authorization token is invalid." });
+          res.status(403).json({ message: "That authorization token is invalid." });
         } else {
           req.decodedToken = decodedToken;
           next();
         };
     });
   } else {
-    res.status(400).json({ message: "This resource requires an authorization token to access." });
+    res.status(401).json({ message: "This resource requires an authorization token to access." });
   };
 };
